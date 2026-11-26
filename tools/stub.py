@@ -1,6 +1,6 @@
 import struct
 from mips import *
-def make_stub(S,path_off,kbase,ksize,io_open,io_read,io_close,entry):
+def make_stub(S,path_off,kbase,ksize,io_open,io_read,io_close,entry,dcache_wbinv):
     c=[]
     c+=[addiu('sp','sp',-32),sw('ra',28,'sp'),sw('a0',24,'sp'),sw('a1',20,'sp'),sw('s0',16,'sp'),sw('s1',12,'sp')]
     c+=[bal(1),NOP]
@@ -13,6 +13,8 @@ def make_stub(S,path_off,kbase,ksize,io_open,io_read,io_close,entry):
     c+=[move('a0','s1')]+li32('t0',kbase)+[addu('a1','s0','t0')]+li32('a2',ksize)
     c+=li32('t0',io_read)+[addu('t9','s0','t0'),jalr('t9'),NOP]
     c+=[move('a0','s1')]+li32('t0',io_close)+[addu('t9','s0','t0'),jalr('t9'),NOP]
+    # 실기: 읽어 들인 KOR.BIN 안 코드가 RAM에 확실히 내려가도록 데이터 캐시 비우기
+    c+=li32('t0',dcache_wbinv)+[addu('t9','s0','t0'),jalr('t9'),NOP]
     done=len(c)
     c[br]=bltz('v0',done-br-1)
     c+=li32('t0',entry)+[addu('t9','s0','t0'),lw('a0',24,'sp'),lw('a1',20,'sp'),lw('s1',12,'sp'),lw('s0',16,'sp'),lw('ra',28,'sp'),jr('t9'),addiu('sp','sp',32)]

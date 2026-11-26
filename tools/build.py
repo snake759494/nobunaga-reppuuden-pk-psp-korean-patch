@@ -12,6 +12,7 @@ STUB_AT=0x2c0a3c         # module offset (file 0x2c0a90) - fatal error strings a
 STUB_END=0x2c0b54
 PATH_STR=b'disc0:/PSP_GAME/USRDIR/KOR.BIN\0'
 IO_OPEN,IO_READ,IO_CLOSE=0x2b0910,0x2b08d0,0x2b08e8
+DCACHE_WBINV=0x2b0ac0   # UtilsForUser sceKernelDcacheWritebackInvalidateAll 스텁
 ENTRY=0x1eec8
 MODSTART_PTR=0x2b1190
 
@@ -84,7 +85,7 @@ def build(msg_patch=None,test=False):
     # ---- stub & entry
     path_off=STUB_AT
     stub_code_at=STUB_AT+len(PATH_STR); stub_code_at=(stub_code_at+3)&~3
-    code=make_stub(stub_code_at,path_off,KBASE,len(K.data),IO_OPEN,IO_READ,IO_CLOSE,ENTRY)
+    code=make_stub(stub_code_at,path_off,KBASE,len(K.data),IO_OPEN,IO_READ,IO_CLOSE,ENTRY,DCACHE_WBINV)
     assert stub_code_at+len(code)<=STUB_END,(hex(stub_code_at+len(code)))
     B.b[STUB_AT+0x54:STUB_AT+0x54+len(PATH_STR)]=PATH_STR
     B.b[stub_code_at+0x54:stub_code_at+0x54+len(code)]=code

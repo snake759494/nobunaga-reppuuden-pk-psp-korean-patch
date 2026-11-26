@@ -2,7 +2,7 @@
 
 ## 실행 파일
 - `PSP_GAME/SYSDIR/EBOOT.BIN` 은 암호화되어 있지만 `BOOT.BIN` 은 평문 ELF(재배치 가능 PRX)입니다. BOOT.BIN을 수정하고 같은 내용을 EBOOT.BIN 자리에도 넣습니다.
-- 확장 데이터(한글 글꼴, 늘어난 문자열, 조사 처리 코드)는 `USRDIR/KOR.BIN` 에 따로 두고, module_start 앞에 끼운 작은 로더(`tools/stub.py`)가 모듈 메모리 끝 0xCBD000에 읽어 들입니다. 프로그램 헤더의 memsz를 그만큼 늘립니다.
+- 확장 데이터(한글 글꼴, 늘어난 문자열, 조사 처리 코드)는 `USRDIR/KOR.BIN` 에 따로 두고, module_start 앞에 끼운 작은 로더(`tools/stub.py`)가 모듈 메모리 끝 0xCBD000에 읽어 들이고, 실기에서 코드가 깨지지 않도록 `sceKernelDcacheWritebackInvalidateAll` 로 데이터 캐시를 비웁니다. 프로그램 헤더의 memsz를 그만큼 늘립니다.
 - 원래 자리보다 긴 문자열은 KOR.BIN에 두고 참조(lui/addiu 쌍, 포인터)를 바꿉니다(`tools/apply.py`, `tools/elf.py`).
 
 ## 문자 인코딩·글꼴
@@ -24,7 +24,11 @@
 - `.NB8` 이미지 컨테이너(`tools/nb8.py`): 팔레트 4/8bpp 이미지 묶음. `tools/img.py` 가 메뉴·타이틀·시나리오·커맨드 버튼·에디터 화면 등을 원래 크기 안에서 다시 그립니다.
 
 ## 영상
-- `USRDIR/MOVIE/*.PMF` 는 2048바이트 PSMF 헤더 + MPEG-PS(2048바이트 팩). 영상을 디코드해 자막을 입히고 H.264(Main, Level 2.1, B프레임 없음, 참조 2, GOP 60)로 다시 인코딩한 뒤, 원래 영상 PES 페이로드 칸에 채워 넣고 남는 곳은 0으로 채워 파일 크기와 타임스탬프를 그대로 유지합니다. 음성(0xBD)은 건드리지 않습니다.
+- `USRDIR/MOVIE/*.PMF` 는 2048바이트 PSMF 헤더 + MPEG-PS(2048바이트 팩). GOP 첫 팩에는 시스템 헤더(0xBB)와 private stream 2(0xBF) 표가 있습니다.
+  - 0xBF 표: `01 E0`, 이 팩 기준으로 GOP 앞 4프레임이 끝나는 팩까지의 거리 4×u16, 0 4바이트, 표 길이 u16, 프레임 수 u16, 프레임마다 (참조 프레임이면 0x0080, 크기 u16). 실기 PSP는 이 표로 액세스 유닛을 자르므로 영상을 바꾸면 반드시 새로 계산해야 합니다.
+  - PTS/DTS(DTS = PTS − 3003)는 GOP 첫 프레임(P-STD 확장 포함)과, 직전 PTS에서 16프레임 이상 지나 처음 시작하는 프레임의 PES에 붙습니다.
+- 영상을 디코드해 자막을 입히고 H.264(Main, Level 2.1, B프레임 없음, 참조 2, AUD)로 다시 인코딩합니다. IDR 위치를 원본과 같게 강제하고, GOP마다 원본 GOP의 팩 범위 안에 들어가도록 x264 zones로 비트레이트를 맞춥니다.
+- `tools/pmf.py` 가 원본의 팩 배치·음성(0xBD)은 그대로 두고 영상 PES와 0xBF 표, PTS를 다시 만들며, 남는 공간은 패딩 스트림(0xBE)으로 채웁니다. 원본 영상을 그대로 넣으면 원본 파일과 바이트 단위로 같은 결과가 나옵니다.
 
 ## ISO
 - `tools/isobuild.py`: 원래 섹터에 들어가면 제자리 교체, 넘치면 이미지 끝에 다시 배치하고 디렉터리 레코드를 고칩니다. KOR.BIN은 USRDIR에 새로 추가합니다.

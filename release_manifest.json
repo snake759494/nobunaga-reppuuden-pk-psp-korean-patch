@@ -1,11 +1,11 @@
 {
-    "version":  "v1.0",
-    "asset":  "NobunagaReppuudenPK_KO_v1.0.xdelta",
-    "asset_size":  16640265,
-    "asset_sha256":  "bf2a7f61e5403214d7658caf35145551467c98294e39e8253382a45bfcb71db7",
+    "version":  "v1.1",
+    "asset":  "NobunagaReppuudenPK_KO_v1.1.xdelta",
+    "asset_size":  15606175,
+    "asset_sha256":  "b486360971405f29fc923c8e7b001af0b30daff118d467db11e4d78b0e0e7306",
     "source_iso_size":  206012416,
     "source_iso_md5":  "b933443625dc61c212e3086563952fd1",
     "source_iso_sha256":  "6aa9e2f8f90eff2cd54e85a85be08caf778b37098a9e8b591659832ceee06dae",
     "result_iso_size":  206880768,
-    "result_iso_sha256":  "e8ba59cc56e562fbbae5831259d1a06a31b7ca2360c8e8f7d8906133d48a5e99"
+    "result_iso_sha256":  "62155633c173c20870f19a428c90005d6da3b1e1acc416a4fe080c7f9f1139d7"
 }
